@@ -5,7 +5,6 @@ import SubjectDashboard from './components/SubjectDashboard.jsx'
 import ChapterForm from './components/ChapterForm.jsx'
 import ChapterList from './components/ChapterList.jsx'
 import SummaryCards from './components/SummaryCards.jsx'
-import ScheduleCard from './components/ScheduleCard.jsx'
 import InflearnImportCard from './components/InflearnImportCard.jsx'
 import {
   loadSubjects,
@@ -49,6 +48,12 @@ function App() {
       setSelectedId((sel) => (sel === id ? next[0]?.id ?? null : sel))
       return next
     })
+  }
+
+  function handleRenameSubject(id, title) {
+    const t = (title || '').trim()
+    if (!t) return
+    updateSubjectById(id, (s) => ({ ...s, title: t }))
   }
 
   function updateSubjectById(id, fn) {
@@ -121,47 +126,6 @@ function App() {
     }))
   }
 
-  function handleScheduleChange(schedule) {
-    if (!selected) return
-    updateSubjectById(selected.id, (s) => {
-      const prevSched = s.schedule && typeof s.schedule === 'object' ? s.schedule : {}
-      const merged = { ...prevSched, ...schedule }
-      let dm = merged.dailyMinutes
-      if (dm === '' || dm == null) {
-        dm = prevSched.dailyMinutes ?? 60
-      }
-      const num = Number(dm)
-      const normalizedDaily =
-        Number.isFinite(num) && num > 0 ? Math.min(1440, Math.floor(num)) : 60
-
-      let sp = Number(merged.speed ?? prevSched.speed)
-      if (!Number.isFinite(sp) || sp <= 0) {
-        sp = 1.5
-      }
-
-      const studyDays = Array.isArray(merged.studyDays)
-        ? merged.studyDays
-        : Array.isArray(prevSched.studyDays)
-          ? prevSched.studyDays
-          : [1, 2, 3, 4, 5]
-
-      return {
-        ...s,
-        schedule: {
-          targetDate:
-            typeof merged.targetDate === 'string'
-              ? merged.targetDate
-              : (typeof prevSched.targetDate === 'string'
-                  ? prevSched.targetDate
-                  : ''),
-          dailyMinutes: normalizedDaily,
-          speed: sp,
-          studyDays,
-        },
-      }
-    })
-  }
-
   return (
     <div className="min-h-svh bg-slate-100/90">
       <header className="border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -170,7 +134,7 @@ function App() {
             과목별 강의 완강 스케줄러
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            과목·챕터·목표일을 정리하고 하루 학습량을 점검하세요.
+            과목·챕터 진행을 정리하고 완강까지 관리하세요.
           </p>
         </div>
       </header>
@@ -186,6 +150,7 @@ function App() {
                   selectedId={selectedId}
                   onSelect={setSelectedId}
                   onDelete={handleDeleteSubject}
+                  onRename={handleRenameSubject}
                 />
               </div>
             </div>
@@ -196,49 +161,7 @@ function App() {
               <SubjectDashboard subjects={subjects} />
             ) : (
               <>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <label className="text-xs font-medium text-slate-500">
-                        과목명
-                      </label>
-                      <input
-                        key={selected.id}
-                        type="text"
-                        defaultValue={selected.title ?? ''}
-                        onBlur={(e) => {
-                          const t = e.target.value.trim()
-                          if (!t) {
-                            e.target.value = selected.title ?? ''
-                            return
-                          }
-                          if (t !== selected.title) {
-                            updateSubjectById(selected.id, (s) => ({
-                              ...s,
-                              title: t,
-                            }))
-                          }
-                        }}
-                        maxLength={200}
-                        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-lg font-semibold text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSubject(selected.id)}
-                      className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
-                    >
-                      이 과목 삭제
-                    </button>
-                  </div>
-                </div>
-
                 <SummaryCards subject={selected} />
-
-                <ScheduleCard
-                  subject={selected}
-                  onScheduleChange={handleScheduleChange}
-                />
 
                 <InflearnImportCard
                   subject={selected}

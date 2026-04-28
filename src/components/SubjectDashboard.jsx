@@ -73,7 +73,7 @@ export default function SubjectDashboard({ subjects }) {
       <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-800">전체 요약</h2>
         <p className="mt-1 text-sm text-slate-600">
-          왼쪽에서 과목을 선택하면 상세·챕터·스케줄을 관리할 수 있습니다.
+          왼쪽에서 과목을 선택하면 상세·챕터를 관리할 수 있습니다.
         </p>
       </div>
 

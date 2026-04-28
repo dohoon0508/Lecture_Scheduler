@@ -22,7 +22,7 @@ function defaultSchedule() {
   return {
     targetDate: '',
     dailyMinutes: 60,
-    speed: 1.5,
+    speed: 1,
     studyDays: [1, 2, 3, 4, 5],
   }
 }
@@ -92,7 +92,7 @@ function normalizeSubject(s) {
     })(),
     speed: (() => {
       const n = Number(schedIn.speed)
-      return Number.isFinite(n) && n > 0 ? n : 1.5
+      return Number.isFinite(n) && n > 0 ? n : 1
     })(),
     studyDays: (() => {
       if (!Array.isArray(schedIn.studyDays)) return [1, 2, 3, 4, 5]
