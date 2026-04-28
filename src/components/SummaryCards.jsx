@@ -298,11 +298,17 @@ function PlaybackSpeedPreview({
               }}
               className="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-800 transition-colors hover:bg-slate-100 sm:max-w-md"
             >
-              며칠 안에 끝내려면?
+              목표 일정
             </button>
           ) : (
             <div className="w-full space-y-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 sm:max-w-none">
-              <div className="flex flex-wrap items-end gap-2">
+              <form
+                className="flex flex-wrap items-end gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  runPlan()
+                }}
+              >
                 <div className="min-w-0 flex-1">
                   <label className="text-[11px] font-medium text-slate-500">
                     목표 일수
@@ -318,8 +324,7 @@ function PlaybackSpeedPreview({
                   />
                 </div>
                 <button
-                  type="button"
-                  onClick={runPlan}
+                  type="submit"
                   className="shrink-0 rounded-md bg-slate-800 px-3 py-2 text-xs font-medium text-white hover:bg-slate-900"
                 >
                   계산
@@ -335,7 +340,7 @@ function PlaybackSpeedPreview({
                 >
                   닫기
                 </button>
-              </div>
+              </form>
               {planError ? (
                 <p className="text-xs text-rose-600">{planError}</p>
               ) : null}
