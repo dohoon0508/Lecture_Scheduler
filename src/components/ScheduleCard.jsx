@@ -44,8 +44,6 @@ export default function ScheduleCard({ subject, onScheduleChange }) {
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="mb-4 text-sm font-semibold text-slate-800">스케줄 설정</h3>
-
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500">
