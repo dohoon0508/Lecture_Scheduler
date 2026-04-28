@@ -7,6 +7,7 @@ import ChapterList from './components/ChapterList.jsx'
 import BulkPasteParser from './components/BulkPasteParser.jsx'
 import SummaryCards from './components/SummaryCards.jsx'
 import ScheduleCard from './components/ScheduleCard.jsx'
+import InflearnImportCard from './components/InflearnImportCard.jsx'
 import {
   loadSubjects,
   saveSubjects,
@@ -67,10 +68,37 @@ function App() {
       title: payload.title,
       durationSeconds: payload.durationSeconds,
       completed: false,
+      contentType: 'video',
+      sectionTitle: '',
+      source: '',
+      sourceUrl: '',
     }
     updateSubjectById(selected.id, (s) => ({
       ...s,
       chapters: [...(Array.isArray(s.chapters) ? s.chapters : []), ch],
+    }))
+  }
+
+  function handleMergeInflearnChapters(newChapters) {
+    if (!selected || !Array.isArray(newChapters)) return
+    updateSubjectById(selected.id, (s) => ({
+      ...s,
+      chapters: [...(Array.isArray(s.chapters) ? s.chapters : []), ...newChapters],
+    }))
+  }
+
+  function handleUpdateChapter(chapterId, partial) {
+    if (!selected || !partial || typeof partial !== 'object') return
+    updateSubjectById(selected.id, (s) => ({
+      ...s,
+      chapters: (Array.isArray(s.chapters) ? s.chapters : []).map((c) => {
+        if (!c || c.id !== chapterId) return c
+        const next = { ...c, ...partial }
+        if (next.contentType !== 'video') {
+          next.durationSeconds = 0
+        }
+        return next
+      }),
     }))
   }
 
@@ -221,12 +249,17 @@ function App() {
                   onScheduleChange={handleScheduleChange}
                 />
 
+                <InflearnImportCard
+                  subject={selected}
+                  onMergeChapters={handleMergeInflearnChapters}
+                />
                 <ChapterForm onAddChapter={handleAddChapter} />
                 <BulkPasteParser onAppendChapters={handleAppendChapters} />
                 <ChapterList
                   chapters={selected.chapters}
                   onToggleComplete={handleToggleChapter}
                   onDelete={handleDeleteChapter}
+                  onUpdateChapter={handleUpdateChapter}
                 />
               </>
             )}

@@ -1,3 +1,5 @@
+import { isVideoChapter } from './chapterTypes.js'
+
 /**
  * @param {string} targetDate "YYYY-MM-DD"
  * @returns {Date | null} 로컬 자정 기준
@@ -71,11 +73,11 @@ export function getRequiredDailySeconds(
   return Math.ceil(adjusted / days)
 }
 
-function sumRemainingSeconds(subject) {
+function sumRemainingVideoSeconds(subject) {
   if (!subject || typeof subject !== 'object') return 0
   const chapters = Array.isArray(subject.chapters) ? subject.chapters : []
   return chapters.reduce((acc, c) => {
-    if (c && c.completed) return acc
+    if (!c || c.completed || !isVideoChapter(c)) return acc
     const sec = Number(c?.durationSeconds)
     return acc + (Number.isFinite(sec) && sec > 0 ? sec : 0)
   }, 0)
@@ -83,7 +85,7 @@ function sumRemainingSeconds(subject) {
 
 /** @param {object} subject */
 export function getRemainingSeconds(subject) {
-  return sumRemainingSeconds(subject)
+  return sumRemainingVideoSeconds(subject)
 }
 
 /**
@@ -127,7 +129,7 @@ export function getScheduleStatus(subject) {
     return { ...baseIncomplete }
   }
 
-  const remainingSeconds = sumRemainingSeconds(subject)
+  const remainingSeconds = sumRemainingVideoSeconds(subject)
   let speed = Number(sched.speed)
   if (!Number.isFinite(speed) || speed <= 0) {
     speed = 1
@@ -137,6 +139,10 @@ export function getScheduleStatus(subject) {
   const availableDailySeconds = Math.floor(Number(dailyMinutes) * 60)
 
   if (remainingSeconds <= 0) {
+    const chapters = Array.isArray(subject.chapters) ? subject.chapters : []
+    const hasIncompleteOther = chapters.some(
+      (c) => c && !c.completed && !isVideoChapter(c),
+    )
     return {
       calculable: true,
       studyDaysCount,
@@ -144,7 +150,9 @@ export function getScheduleStatus(subject) {
       requiredDailySeconds: 0,
       availableDailySeconds,
       canFinish: true,
-      message: '모든 챕터를 완료했습니다.',
+      message: hasIncompleteOther
+        ? '남은 영상 학습은 없습니다. 자료·과제·기타 항목은 체크리스트에서 관리할 수 있습니다.'
+        : '모든 챕터를 완료했습니다.',
     }
   }
 

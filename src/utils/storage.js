@@ -1,6 +1,8 @@
 const STORAGE_KEY = 'lecture-scheduler-subjects'
 const LEGACY_KEY = 'lecture-scheduler-lectures'
 
+const CONTENT_TYPES = new Set(['video', 'document', 'assignment', 'unknown'])
+
 export function generateId(prefix) {
   const p = typeof prefix === 'string' && prefix ? prefix : 'id'
   try {
@@ -30,14 +32,34 @@ function normalizeChapter(c) {
   const id = typeof c.id === 'string' && c.id ? c.id : generateId('chapter')
   const title = typeof c.title === 'string' ? c.title : '챕터'
   const durationSeconds = Number(c.durationSeconds)
+  let contentType =
+    typeof c.contentType === 'string' ? c.contentType.trim() : ''
+  if (!CONTENT_TYPES.has(contentType)) {
+    contentType = 'video'
+  }
+
+  const sectionTitle =
+    typeof c.sectionTitle === 'string' ? c.sectionTitle : ''
+  const source = typeof c.source === 'string' ? c.source : ''
+  const sourceUrl = typeof c.sourceUrl === 'string' ? c.sourceUrl : ''
+
+  let dur =
+    Number.isFinite(durationSeconds) && durationSeconds >= 0
+      ? Math.floor(durationSeconds)
+      : 0
+  if (contentType !== 'video') {
+    dur = 0
+  }
+
   return {
     id,
     title,
-    durationSeconds:
-      Number.isFinite(durationSeconds) && durationSeconds >= 0
-        ? Math.floor(durationSeconds)
-        : 0,
+    durationSeconds: dur,
     completed: Boolean(c.completed),
+    contentType,
+    sectionTitle,
+    source,
+    sourceUrl,
   }
 }
 
@@ -105,6 +127,10 @@ function tryMigrateLegacy(raw) {
           durationSeconds:
             Number.isFinite(sec) && sec >= 0 ? Math.floor(sec) : 0,
           completed: Boolean(row.completed),
+          contentType: 'video',
+          sectionTitle: '',
+          source: '',
+          sourceUrl: '',
         }
       })
       .filter(Boolean)

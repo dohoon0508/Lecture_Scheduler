@@ -15,6 +15,10 @@ export default function BulkPasteParser({ onAppendChapters }) {
       title: ch.title,
       durationSeconds: ch.durationSeconds,
       completed: false,
+      contentType: 'video',
+      sectionTitle: '',
+      source: '',
+      sourceUrl: '',
     }))
     onAppendChapters(withIds)
     setText('')

@@ -6,6 +6,11 @@ import {
 } from '../utils/schedule.js'
 import { formatSecondsHuman } from '../utils/time.js'
 
+function hasIncompleteChapter(s) {
+  const ch = Array.isArray(s?.chapters) ? s.chapters : []
+  return ch.some((c) => c && !c.completed)
+}
+
 function todayWeekday() {
   return new Date().getDay()
 }
@@ -39,7 +44,7 @@ export default function SubjectDashboard({ subjects }) {
       const days = Array.isArray(s.schedule?.studyDays)
         ? s.schedule.studyDays
         : []
-      if (rem > 0 && days.includes(tw)) {
+      if (hasIncompleteChapter(s) && days.includes(tw)) {
         todayList.push(s)
       }
 
