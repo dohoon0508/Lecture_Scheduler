@@ -4,7 +4,6 @@ import SubjectForm from './components/SubjectForm.jsx'
 import SubjectDashboard from './components/SubjectDashboard.jsx'
 import ChapterForm from './components/ChapterForm.jsx'
 import ChapterList from './components/ChapterList.jsx'
-import BulkPasteParser from './components/BulkPasteParser.jsx'
 import SummaryCards from './components/SummaryCards.jsx'
 import ScheduleCard from './components/ScheduleCard.jsx'
 import InflearnImportCard from './components/InflearnImportCard.jsx'
@@ -99,14 +98,6 @@ function App() {
         }
         return next
       }),
-    }))
-  }
-
-  function handleAppendChapters(list) {
-    if (!selected || !Array.isArray(list)) return
-    updateSubjectById(selected.id, (s) => ({
-      ...s,
-      chapters: [...(Array.isArray(s.chapters) ? s.chapters : []), ...list],
     }))
   }
 
@@ -254,7 +245,6 @@ function App() {
                   onMergeChapters={handleMergeInflearnChapters}
                 />
                 <ChapterForm onAddChapter={handleAddChapter} />
-                <BulkPasteParser onAppendChapters={handleAppendChapters} />
                 <ChapterList
                   chapters={selected.chapters}
                   onToggleComplete={handleToggleChapter}
