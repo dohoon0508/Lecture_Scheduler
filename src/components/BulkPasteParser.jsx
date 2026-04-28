@@ -26,12 +26,6 @@ export default function BulkPasteParser({ onAppendChapters }) {
 
   return (
     <div className="rounded-xl border border-dashed border-amber-300/80 bg-amber-50/50 p-4">
-      <h3 className="mb-2 text-sm font-semibold text-amber-900/90">
-        목차 붙여넣기
-      </h3>
-      <p className="mb-2 text-xs text-amber-900/70">
-        각 줄 끝에 시간이 있으면 자동으로 챕터로 추가됩니다.
-      </p>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
