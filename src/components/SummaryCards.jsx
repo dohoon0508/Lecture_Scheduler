@@ -114,7 +114,8 @@ function truncateTitle(t, max) {
 
 /**
  * 완료한 영상은 제외한 rows만 사용. 남은 분량 T를 D일로 균등(n빵) 나눈 경계(강 단위).
- * @param {{ title: string, durationSeconds: number }[]} rows
+ * rows[].videoOrdinal: 과목 내 영상 챕터 순번(1부터, 완료 포함 전체 영상 기준).
+ * @param {{ title: string, durationSeconds: number, videoOrdinal: number }[]} rows
  * @param {number} dayCount
  */
 function buildLectureDayPlan(rows, dayCount) {
@@ -151,12 +152,12 @@ function buildLectureDayPlan(rows, dayCount) {
     }
 
     if (day === D) {
-      const a = start + 1
-      const b = n
+      const ordA = rows[start].videoOrdinal
+      const ordB = rows[n - 1].videoOrdinal
       const tail =
-        a === b
-          ? `${b}강 (${truncateTitle(rows[start].title, 28)})`
-          : `${a}~${b}강 (${truncateTitle(rows[start].title, 22)} … ${truncateTitle(rows[n - 1].title, 22)})`
+        ordA === ordB
+          ? `${ordA}강 (${truncateTitle(rows[start].title, 28)})`
+          : `${ordA}~${ordB}강 (${truncateTitle(rows[start].title, 22)} … ${truncateTitle(rows[n - 1].title, 22)})`
       detailLines.push(`${day}일차 ~ 완강 · ${tail}`)
       break
     }
@@ -186,15 +187,15 @@ function buildLectureDayPlan(rows, dayCount) {
       end = Math.min(n - 1, start + chunk - 1)
     }
 
-    const a = start + 1
-    const b = end + 1
-    if (a === b) {
+    const ordA = rows[start].videoOrdinal
+    const ordB = rows[end].videoOrdinal
+    if (ordA === ordB) {
       detailLines.push(
-        `${day}일차 ~ ${b}강 (${truncateTitle(rows[end].title, 32)})`,
+        `${day}일차 ~ ${ordB}강 (${truncateTitle(rows[end].title, 32)})`,
       )
     } else {
       detailLines.push(
-        `${day}일차 ~ ${b}강까지 (${a}~${b}강, ${truncateTitle(rows[start].title, 22)} … ${truncateTitle(rows[end].title, 22)})`,
+        `${day}일차 ~ ${ordB}강까지 (${ordA}~${ordB}강, ${truncateTitle(rows[start].title, 22)} … ${truncateTitle(rows[end].title, 22)})`,
       )
     }
     prevEnd = end
@@ -207,7 +208,7 @@ function buildLectureDayPlan(rows, dayCount) {
  * @param {{
  *   savedSpeed: number
  *   incompleteContentSeconds: number
- *   incompleteVideoRows: { title: string, durationSeconds: number }[]
+ *   incompleteVideoRows: { title: string, durationSeconds: number, videoOrdinal: number }[]
  * }} props
  */
 function PlaybackSpeedPreview({
@@ -348,7 +349,7 @@ function PlaybackSpeedPreview({
                   {planResult.dayLines.length > 0 ? (
                     <div>
                       <p className="text-[11px] font-semibold text-slate-600">
-                        일차별 (완료 제외·미완료 영상만 1강부터 순서대로)
+                        일차별 (완료 제외·커리큘럼 영상 N강 기준)
                       </p>
                       <ol className="mt-1.5 list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-slate-800">
                         {planResult.dayLines.map((line, i) => (
@@ -397,13 +398,17 @@ export default function SummaryCards({ subject }) {
   const incompleteVideoRows = useMemo(() => {
     const ch = Array.isArray(subject?.chapters) ? subject.chapters : []
     const rows = []
+    let videoOrdinal = 0
     for (const c of ch) {
-      if (!c || !isVideoChapter(c) || c.completed) continue
+      if (!c || !isVideoChapter(c)) continue
+      videoOrdinal += 1
+      if (c.completed) continue
       const sec = Number(c.durationSeconds)
       const d = Number.isFinite(sec) && sec >= 0 ? Math.floor(sec) : 0
       rows.push({
-        title: (c.title || '').trim() || `강의 ${rows.length + 1}`,
+        title: (c.title || '').trim() || `강의 ${videoOrdinal}`,
         durationSeconds: d,
+        videoOrdinal,
       })
     }
     return rows

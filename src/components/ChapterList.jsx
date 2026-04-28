@@ -23,6 +23,7 @@ export default function ChapterList({
   onUpdateChapter,
 }) {
   const [editingId, setEditingId] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
   const [editDuration, setEditDuration] = useState('')
   const [editType, setEditType] = useState('video')
 
@@ -33,6 +34,7 @@ export default function ChapterList({
   function startEdit(c) {
     if (!c?.id) return
     setEditingId(c.id)
+    setEditTitle((c.title || '').trim() ? c.title : '')
     setEditDuration(c.durationSeconds > 0 ? String(c.durationSeconds) : '')
     setEditType(
       ['video', 'document', 'assignment', 'unknown'].includes(c.contentType)
@@ -43,6 +45,8 @@ export default function ChapterList({
 
   function saveEdit(id) {
     if (typeof onUpdateChapter !== 'function') return
+    const t = editTitle.trim()
+    if (!t) return
     const nextType = editType
     let seconds = 0
     if (nextType === 'video') {
@@ -55,6 +59,7 @@ export default function ChapterList({
       }
     }
     onUpdateChapter(id, {
+      title: t,
       contentType: nextType,
       durationSeconds: nextType === 'video' ? seconds : 0,
     })
@@ -73,7 +78,6 @@ export default function ChapterList({
           const label = CONTENT_TYPE_LABELS[ct] || CONTENT_TYPE_LABELS.unknown
           const showTime = isVideoChapter(c) && Number(c.durationSeconds) > 0
           const dur = Number(c.durationSeconds)
-          const isUnk = ct === 'unknown'
           const isEditing = editingId === c.id
 
           return (
@@ -127,17 +131,15 @@ export default function ChapterList({
               </div>
 
               <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
-                {isUnk && !isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => startEdit(c)}
-                    className="text-xs text-emerald-700 hover:underline"
-                  >
-                    시간·유형 수정
-                  </button>
-                ) : null}
                 {isEditing ? (
-                  <div className="flex w-full flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 sm:w-48">
+                  <div className="flex w-full flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 sm:w-56">
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      placeholder="챕터 이름"
+                      className="rounded border border-slate-200 bg-white px-2 py-1 text-xs"
+                    />
                     <select
                       value={editType}
                       onChange={(e) => setEditType(e.target.value)}
@@ -154,6 +156,7 @@ export default function ChapterList({
                       onChange={(e) => setEditDuration(e.target.value)}
                       placeholder="초 또는 12:30"
                       className="rounded border border-slate-200 px-2 py-1 text-xs"
+                      disabled={editType !== 'video'}
                     />
                     <div className="flex gap-1">
                       <button
@@ -172,14 +175,24 @@ export default function ChapterList({
                       </button>
                     </div>
                   </div>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => onDelete(c.id)}
-                  className="text-xs text-rose-600 hover:underline"
-                >
-                  삭제
-                </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(c)}
+                      className="text-xs text-slate-600 hover:text-slate-900 hover:underline"
+                    >
+                      수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(c.id)}
+                      className="text-xs text-rose-600 hover:underline"
+                    >
+                      삭제
+                    </button>
+                  </>
+                )}
               </div>
             </li>
           )
