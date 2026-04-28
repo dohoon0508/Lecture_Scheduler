@@ -138,10 +138,13 @@ function buildLectureDayPlan(rows, dayCount) {
   }
   const T = cum[n - 1]
   if (T <= 0) {
-    detailLines.push('남은 영상 길이가 0입니다. (강 수만 참고하세요)')
+    detailLines.push(
+      '미완료 영상 중 재생 길이가 있는 강이 없어, 시간 기준 일차 나눔을 할 수 없습니다. (길이 0·미상 강만 있으면 스케줄을 쪼개지 않습니다.)',
+    )
+    return { lines: [], detailLines }
   }
 
-  const fair = T > 0 ? T / D : 0
+  const fair = T / D
   let prevEnd = -1
 
   for (let day = 1; day <= D; day++) {
@@ -162,29 +165,21 @@ function buildLectureDayPlan(rows, dayCount) {
       break
     }
 
-    const target = T > 0 ? (T * day) / D : 0
+    const target = (T * day) / D
     let end = start
-    if (T > 0) {
-      while (end < n && cum[end] < target) {
+    while (end < n && cum[end] < target) {
+      end += 1
+    }
+    if (end >= n) end = n - 1
+    // 목표 분량보다 하루 치가 짧으면 다음 강까지
+    while (end < n - 1) {
+      const base = start > 0 ? cum[start - 1] : 0
+      const slice = cum[end] - base
+      if (slice + 1e-9 < fair) {
         end += 1
+      } else {
+        break
       }
-      if (end >= n) end = n - 1
-      // 목표 분량보다 하루 치가 짧으면 다음 강까지
-      while (end < n - 1) {
-        const base = start > 0 ? cum[start - 1] : 0
-        const slice = cum[end] - base
-        if (slice + 1e-9 < fair) {
-          end += 1
-        } else {
-          break
-        }
-      }
-    } else {
-      // 길이 0강들만 있을 때: 가능한 한 균등하게 갯수 나눔
-      const remainingDays = D - day + 1
-      const remainingCount = n - start
-      const chunk = Math.ceil(remainingCount / remainingDays)
-      end = Math.min(n - 1, start + chunk - 1)
     }
 
     const ordA = rows[start].videoOrdinal
@@ -250,7 +245,7 @@ function PlaybackSpeedPreview({
       incompleteContentSeconds > 0 ? incompleteContentSeconds / clamped : 0
     if (wall <= 0) {
       const summary = [
-        '남은 영상 길이 합이 0입니다. 아래는 미완료 강 개수만 균등하게 나눕니다.',
+        '남은 영상 재생 길이 합이 0입니다. 시간으로 일차를 나누려면 영상별 길이가 필요합니다.',
       ]
       const { detailLines } = buildLectureDayPlan(incompleteVideoRows, dInt)
       setPlanResult({ summary, dayLines: detailLines })
