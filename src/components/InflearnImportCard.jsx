@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiUrl } from '../utils/apiUrl.js'
 import { generateId } from '../utils/storage.js'
 import { formatSecondsHuman } from '../utils/time.js'
 
@@ -48,7 +49,7 @@ export default function InflearnImportCard({ subject, onMergeChapters }) {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/import/inflearn', {
+      const res = await fetch(apiUrl('/api/import/inflearn'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: u }),
@@ -69,10 +70,11 @@ export default function InflearnImportCard({ subject, onMergeChapters }) {
       }
       setResult(data)
     } catch (e) {
-      setError(
-        e?.message ||
-          '서버에 연결하지 못했습니다. npm run dev로 서버가 켜져 있는지 확인해주세요.',
-      )
+      const hint =
+        import.meta.env.VITE_API_BASE_URL?.trim()
+          ? '백엔드(VITE_API_BASE_URL)에 연결되지 않았습니다.'
+          : '로컬은 npm run dev(프록시)로 서버를 켜 주세요. Vercel 등 배포 시 .env에 VITE_API_BASE_URL을 백엔드 주소로 넣어 주세요.'
+      setError(e?.message || hint)
     } finally {
       setLoading(false)
     }
